@@ -5,6 +5,7 @@ const Order = require("../models/Order");
 const ApiError = require("../utils/ApiError");
 const asyncHandler = require("../utils/asyncHandler");
 const { buildReceipt } = require("../utils/receipt");
+const { resolveAndValidateItems, decrementStock } = require("../services/orderFulfillmentService");
 
 // GET /api/webhook/foods - flat array of available foods with stock, for the AI to check
 const listFoods = asyncHandler(async (req, res) => {
@@ -12,37 +13,10 @@ const listFoods = asyncHandler(async (req, res) => {
   res.json(foods);
 });
 
-// Validates requested items against live Food docs.
-// Throws ApiError(400, "<name> is out of stock") etc. Returns resolved item list.
-async function resolveAndValidateItems(items, session) {
-  const resolved = [];
-
-  for (const reqItem of items) {
-    const query = Food.findById(reqItem.foodId);
-    if (session) query.session(session);
-    const food = await query;
-
-    if (!food) {
-      throw new ApiError(400, `Item ${reqItem.foodId} was not found.`);
-    }
-    if (!food.available) {
-      throw new ApiError(400, `${food.name} is not available.`);
-    }
-    if (typeof food.stock === "number" && food.stock < reqItem.quantity) {
-      throw new ApiError(400, `${food.name} is out of stock.`);
-    }
-
-    resolved.push({
-      food,
-      foodId: food._id,
-      name: food.name,
-      quantity: reqItem.quantity,
-      price: food.price,
-    });
-  }
-
-  return resolved;
-}
+// NOTE: resolveAndValidateItems/decrementStock used to live inline in this
+// file. They've been extracted to services/orderFulfillmentService.js
+// (unchanged logic) so the new customer order controller can reuse them
+// instead of duplicating this validation.
 
 async function createOrderWithSession(body, session) {
   const { customerPhone, customerName, customerAddress, items, note } = body;
@@ -67,16 +41,7 @@ async function createOrderWithSession(body, session) {
   }
 
   // Decrement stock, flip availability at 0
-  for (const item of resolvedItems) {
-    if (typeof item.food.stock === "number") {
-      item.food.stock -= item.quantity;
-      if (item.food.stock <= 0) {
-        item.food.stock = 0;
-        item.food.available = false;
-      }
-      await item.food.save({ session });
-    }
-  }
+  await decrementStock(resolvedItems, session);
 
   const [order] = await Order.create(
     [

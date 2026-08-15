@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const customerSchema = new mongoose.Schema(
   {
@@ -8,6 +9,25 @@ const customerSchema = new mongoose.Schema(
     totalOrders: { type: Number, default: 0 },
     totalSpent: { type: Number, default: 0 },
     lastOrderAt: { type: Date, default: null },
+
+    // --- Website auth fields (additive; WhatsApp-created records won't have these) ---
+    email: {
+      type: String,
+      unique: true,
+      sparse: true, // allows many docs with no email at all
+      lowercase: true,
+      trim: true,
+      default: undefined,
+    },
+    password: { type: String, select: false },
+    city: { type: String, default: "" },
+    postalCode: { type: String, default: "" },
+    isEmailVerified: { type: Boolean, default: false },
+    verificationToken: { type: String, select: false },
+    verificationTokenExpires: { type: Date, select: false },
+    resetPasswordToken: { type: String, select: false },
+    resetPasswordExpires: { type: Date, select: false },
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Food", default: [] }],
   },
   {
     timestamps: true,
@@ -16,9 +36,26 @@ const customerSchema = new mongoose.Schema(
       transform: (_doc, ret) => {
         delete ret._id;
         delete ret.__v;
+        // never leak auth secrets even if a query explicitly selected them
+        delete ret.password;
+        delete ret.verificationToken;
+        delete ret.verificationTokenExpires;
+        delete ret.resetPasswordToken;
+        delete ret.resetPasswordExpires;
       },
     },
   }
 );
+
+customerSchema.pre("save", async function hashPasswordIfModified(next) {
+  if (!this.isModified("password") || !this.password) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
+
+customerSchema.methods.comparePassword = function comparePassword(candidate) {
+  if (!this.password) return Promise.resolve(false);
+  return bcrypt.compare(candidate, this.password);
+};
 
 module.exports = mongoose.model("Customer", customerSchema);

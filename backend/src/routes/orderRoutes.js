@@ -8,7 +8,9 @@ const router = express.Router();
 
 const listQuerySchema = z.object({
   search: z.string().optional(),
-  status: z.enum(["pending", "preparing", "ready", "delivered", "cancelled"]).optional(),
+  status: z
+    .enum(["pending", "confirmed", "preparing", "ready", "out_for_delivery", "delivered", "cancelled"])
+    .optional(),
   from: z.string().optional(),
   to: z.string().optional(),
   sort: z.string().optional(),
@@ -20,7 +22,7 @@ const listQuerySchema = z.object({
 const idParamSchema = z.object({ id: z.string().min(1) });
 
 const statusBodySchema = z.object({
-  status: z.enum(["pending", "preparing", "ready", "delivered", "cancelled"]),
+  status: z.enum(["pending", "confirmed", "preparing", "ready", "out_for_delivery", "delivered", "cancelled"]),
 });
 
 router.get("/", requireAuth, validate({ query: listQuerySchema }), orderController.list);
