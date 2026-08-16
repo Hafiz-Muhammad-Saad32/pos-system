@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { Heart, Plus } from "lucide-react";
 
@@ -33,8 +33,7 @@ export function FoodCard({ food, index = 0 }: FoodCardProps) {
       )}
     >
       <Link
-        to="/menu/$id"
-        params={{ id: food.id }}
+        to={`/menu/${food.id}`}
         className="relative block aspect-[4/3] overflow-hidden bg-surface"
       >
         <img
@@ -61,19 +60,19 @@ export function FoodCard({ food, index = 0 }: FoodCardProps) {
       <button
         type="button"
         onClick={() => toggleFavorite(food)}
-        aria-label={saved ? `Remove ${food.name} from favourites` : `Save ${food.name} to favourites`}
+        aria-label={
+          saved ? `Remove ${food.name} from favourites` : `Save ${food.name} to favourites`
+        }
         aria-pressed={saved}
         className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-background/80 text-foreground backdrop-blur transition-transform duration-200 hover:scale-105"
       >
-        <Heart
-          className={cn("h-4 w-4 transition-colors", saved && "fill-primary text-primary")}
-        />
+        <Heart className={cn("h-4 w-4 transition-colors", saved && "fill-primary text-primary")} />
       </button>
 
       <div className="flex flex-1 flex-col p-5">
         <div className="flex items-start justify-between gap-3">
           <h3 className="min-w-0 text-lg leading-snug text-foreground">
-            <Link to="/menu/$id" params={{ id: food.id }} className="hover:text-primary">
+            <Link to={`/menu/${food.id}`} className="hover:text-primary">
               {food.name}
             </Link>
           </h3>
@@ -83,9 +82,7 @@ export function FoodCard({ food, index = 0 }: FoodCardProps) {
           {food.description}
         </p>
         <div className="mt-5 flex items-center justify-between gap-3 pt-1">
-          <span className="font-display text-2xl text-foreground">
-            {formatPrice(food.price)}
-          </span>
+          <span className="font-display text-2xl text-foreground">{formatPrice(food.price)}</span>
           <Button
             size="sm"
             className="rounded-full"

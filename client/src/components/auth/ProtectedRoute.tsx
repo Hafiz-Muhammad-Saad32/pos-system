@@ -1,6 +1,6 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import type { ReactNode } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { ListSkeleton } from "@/components/common/LoadingSkeleton";
 import { useAuth } from "@/context/AuthContext";
@@ -12,15 +12,14 @@ import { useAuth } from "@/context/AuthContext";
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
-  const location = useRouterState({ select: (state) => state.location });
+  const location = useLocation();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({
-        to: "/login",
-        search: { redirect: location.pathname },
-        replace: true,
-      });
+      navigate(
+        { pathname: "/login", search: `?redirect=${encodeURIComponent(location.pathname)}` },
+        { replace: true },
+      );
     }
   }, [isLoading, isAuthenticated, navigate, location.pathname]);
 

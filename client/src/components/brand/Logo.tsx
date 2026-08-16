@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 
 import mark from "@/assets/meridian-mark.png";
 import { cn } from "@/lib/utils";
@@ -34,19 +34,11 @@ export function Logo({ className, size = "md", withWordmark = true }: LogoProps)
       {withWordmark ? (
         <span className="flex flex-col leading-none">
           <span
-            className={cn(
-              "font-display font-medium tracking-[0.14em] text-foreground",
-              s.text,
-            )}
+            className={cn("font-display font-medium tracking-[0.14em] text-foreground", s.text)}
           >
             MERIDIAN
           </span>
-          <span
-            className={cn(
-              "mt-0.5 tracking-[0.34em] text-muted-foreground uppercase",
-              s.sub,
-            )}
-          >
+          <span className={cn("mt-0.5 tracking-[0.34em] text-muted-foreground uppercase", s.sub)}>
             Kitchen & Bar
           </span>
         </span>

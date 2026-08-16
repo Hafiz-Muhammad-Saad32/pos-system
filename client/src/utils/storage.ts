@@ -28,7 +28,7 @@ export function removeStorage(key: string) {
 }
 
 export const STORAGE_KEYS = {
-  auth:  "meridian.auth.user",    // cached user object (non-sensitive)
-  cart:  "meridian.cart",         // cart stays client-side
+  auth: "meridian.auth.user", // cached user object (non-sensitive)
+  cart: "meridian.cart", // cart stays client-side
   recentSearches: "meridian.search.recent",
 } as const;

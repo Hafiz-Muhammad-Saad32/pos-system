@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Check, Clock } from "lucide-react";
 
@@ -31,8 +31,8 @@ export function OrderStatusTimeline({ order }: { order: Order }) {
       <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
         <h3 className="text-lg text-foreground">Order cancelled</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          This order was cancelled and any payment has been refunded to the original
-          method. Need it after all?{" "}
+          This order was cancelled and any payment has been refunded to the original method. Need it
+          after all?{" "}
           <Link to="/menu" className="text-primary underline-offset-4 hover:underline">
             Reorder from the menu
           </Link>

@@ -23,7 +23,7 @@ interface CartContextValue {
   count: number;
   isHydrated: boolean;
   promoCode: string | null;
-  promoDiscount: number;       // 0–1, e.g. 0.1 = 10%
+  promoDiscount: number; // 0–1, e.g. 0.1 = 10%
   subtotal: number;
   deliveryFee: number;
   discount: number;
@@ -103,27 +103,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [lines, promoDiscount],
   );
 
-  const addItem = useCallback((food: Food, quantity = 1) => {
-    if (!food.available) {
-      toast.error(`${food.name} is currently unavailable`);
-      return;
-    }
-    registerFood(food);
-    setItems((prev) => {
-      const existing = prev.find((item) => item.foodId === food.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.foodId === food.id
-            ? { ...item, quantity: Math.min(item.quantity + quantity, 20) }
-            : item,
-        );
+  const addItem = useCallback(
+    (food: Food, quantity = 1) => {
+      if (!food.available) {
+        toast.error(`${food.name} is currently unavailable`);
+        return;
       }
-      return [...prev, { foodId: food.id, quantity }];
-    });
-    toast.success(`${food.name} added to cart`, {
-      description: `${quantity} × ${formatPrice(food.price)}`,
-    });
-  }, [registerFood]);
+      registerFood(food);
+      setItems((prev) => {
+        const existing = prev.find((item) => item.foodId === food.id);
+        if (existing) {
+          return prev.map((item) =>
+            item.foodId === food.id
+              ? { ...item, quantity: Math.min(item.quantity + quantity, 20) }
+              : item,
+          );
+        }
+        return [...prev, { foodId: food.id, quantity }];
+      });
+      toast.success(`${food.name} added to cart`, {
+        description: `${quantity} × ${formatPrice(food.price)}`,
+      });
+    },
+    [registerFood],
+  );
 
   const setQuantity = useCallback((foodId: string, quantity: number) => {
     setItems((prev) =>

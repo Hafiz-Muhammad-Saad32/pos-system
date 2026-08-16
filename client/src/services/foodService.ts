@@ -18,11 +18,11 @@ export interface FoodQuery {
 
 export async function getFoods(query: FoodQuery = {}): Promise<Food[]> {
   const params: Record<string, string> = {};
-  if (query.search)           params["search"]        = query.search;
+  if (query.search) params["search"] = query.search;
   if (query.category && query.category !== "All") params["category"] = query.category;
-  if (query.maxPrice)         params["maxPrice"]      = String(query.maxPrice);
-  if (query.availableOnly)    params["availableOnly"] = "true";
-  if (query.sort)             params["sort"]          = query.sort;
+  if (query.maxPrice) params["maxPrice"] = String(query.maxPrice);
+  if (query.availableOnly) params["availableOnly"] = "true";
+  if (query.sort) params["sort"] = query.sort;
 
   const { data } = await api.get<{ foods: Food[] }>("/foods", { params });
   return data.foods;
@@ -105,4 +105,16 @@ export async function searchFoods(term: string): Promise<Food[]> {
 export async function getMaxPrice(): Promise<number> {
   const { data } = await api.get<{ maxPrice: number }>("/foods/max-price");
   return data.maxPrice;
+}
+
+/**
+ * Resolves a list of food ids to their Food objects, in parallel.
+ * NOTE: this export was referenced by the favorites page but missing from
+ * the original codebase (pre-existing bug, unrelated to this migration) —
+ * added here so the app builds and favourites resolve correctly.
+ */
+export async function getFoodsByIdsSync(ids: string[]): Promise<Food[]> {
+  if (!ids.length) return [];
+  const results = await Promise.all(ids.map((id) => getFoodById(id).catch(() => null)));
+  return results.filter((food): food is Food => food !== null);
 }

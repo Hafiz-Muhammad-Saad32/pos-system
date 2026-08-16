@@ -4,7 +4,6 @@
 4. socket ko dekhna he
 
 5. notification icon kaam nahi karraha
-6. favorities kaam nahi kar raha
 7. pos food catagory problem kar rahi he
-8. ye add nahi he pos pe ke customer kaha se aaya whatsapp/website
 9. payment kese kare ga pos me show nahi ho raha
+10. order id duplicate error

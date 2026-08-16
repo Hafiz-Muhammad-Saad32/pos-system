@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Heart,
@@ -35,12 +35,26 @@ const NAV_LINKS = [
   { to: "/contact", label: "Contact" },
 ] as const;
 
+function navLinkClassName({ isActive }: { isActive: boolean }) {
+  return cn(
+    "rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground",
+    isActive && "text-primary",
+  );
+}
+
+function mobileNavLinkClassName({ isActive }: { isActive: boolean }) {
+  return cn(
+    "block rounded-xl px-3 py-3 font-display text-2xl text-foreground transition-colors",
+    isActive && "text-primary",
+  );
+}
+
 export function Navbar() {
   const { user, isAuthenticated, logout } = useAuth();
   const { count } = useCart();
   const { ids: favoriteIds } = useFavorites();
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { pathname } = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -59,7 +73,7 @@ export function Navbar() {
   async function handleLogout() {
     await logout();
     setMobileOpen(false);
-    navigate({ to: "/", replace: true });
+    navigate("/", { replace: true });
   }
 
   return (
@@ -75,14 +89,14 @@ export function Navbar() {
 
           <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
             {NAV_LINKS.map((link) => (
-              <Link
+              <NavLink
                 key={link.to}
                 to={link.to}
-                activeOptions={{ exact: link.to === "/" }}
-                className="rounded-full px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground data-[status=active]:text-primary"
+                end={link.to === "/"}
+                className={navLinkClassName}
               >
                 {link.label}
-              </Link>
+              </NavLink>
             ))}
           </nav>
 
@@ -235,13 +249,13 @@ export function Navbar() {
                 <ul className="space-y-1">
                   {NAV_LINKS.map((link) => (
                     <li key={link.to}>
-                      <Link
+                      <NavLink
                         to={link.to}
-                        activeOptions={{ exact: link.to === "/" }}
-                        className="block rounded-xl px-3 py-3 font-display text-2xl text-foreground transition-colors data-[status=active]:text-primary"
+                        end={link.to === "/"}
+                        className={mobileNavLinkClassName}
                       >
                         {link.label}
-                      </Link>
+                      </NavLink>
                     </li>
                   ))}
                 </ul>
@@ -291,9 +305,7 @@ export function Navbar() {
                         {user.name.charAt(0)}
                       </span>
                       <span className="min-w-0">
-                        <span className="block truncate text-sm text-foreground">
-                          {user.name}
-                        </span>
+                        <span className="block truncate text-sm text-foreground">{user.name}</span>
                         <span className="block truncate text-xs text-muted-foreground">
                           {user.email}
                         </span>

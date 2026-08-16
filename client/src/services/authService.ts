@@ -35,10 +35,7 @@ export async function forgotPassword(email: string): Promise<{ message: string }
   return data;
 }
 
-export async function resetPassword(
-  token: string,
-  password: string,
-): Promise<{ message: string }> {
+export async function resetPassword(token: string, password: string): Promise<{ message: string }> {
   const { data } = await api.post<{ message: string }>("/auth/reset-password", {
     token,
     password,

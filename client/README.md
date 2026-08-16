@@ -132,21 +132,21 @@ PUBLIC ROUTES:
 
 /
 
- /menu
+/menu
 
- /menu/:id
+/menu/:id
 
- /about
+/about
 
- /contact
+/contact
 
- /login
+/login
 
- /signup
+/signup
 
- /forgot-password
+/forgot-password
 
- /404
+/404
 
 PROTECTED CUSTOMER ROUTES:
 
@@ -970,31 +970,31 @@ pages/
 
 features/
 
-  auth/
+auth/
 
-  foods/
+foods/
 
-  cart/
+cart/
 
-  orders/
+orders/
 
-  profile/
+profile/
 
-  favorites/
+favorites/
 
-  checkout/
+checkout/
 
 services/
 
-  authService.ts
+authService.ts
 
-  foodService.ts
+foodService.ts
 
-  orderService.ts
+orderService.ts
 
-  customerService.ts
+customerService.ts
 
-  paymentService.ts
+paymentService.ts
 
 hooks/
 

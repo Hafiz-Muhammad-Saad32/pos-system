@@ -17,9 +17,7 @@ export function PageHeader({ eyebrow, title, description, action }: PageHeaderPr
           {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
           <h1 className="display-lg mt-3 text-foreground">{title}</h1>
           {description ? (
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              {description}
-            </p>
+            <p className="mt-4 text-base leading-relaxed text-muted-foreground">{description}</p>
           ) : null}
         </div>
         {action ? <div className="shrink-0">{action}</div> : null}

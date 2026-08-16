@@ -4,7 +4,7 @@
  */
 
 export type FoodCategory =
-    "Salads"
+  | "Salads"
   | "Starters & Appetizers"
   | "Soups"
   | "BBQ & Kabab"
@@ -18,7 +18,7 @@ export type FoodCategory =
   | "Chinese"
   | "Breads & Naan"
   | "Desserts"
-  | "Beverages"
+  | "Beverages";
 
 export interface Food {
   id: string;
@@ -57,13 +57,7 @@ export type PaymentMethod = "cash" | "card" | "online";
 export type PaymentStatus = "unpaid" | "paid" | "refunded";
 
 export type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "preparing"
-  | "ready"
-  | "out_for_delivery"
-  | "delivered"
-  | "cancelled";
+  "pending" | "confirmed" | "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 
 export type OrderSource = "website" | "whatsapp";
 

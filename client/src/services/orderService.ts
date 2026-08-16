@@ -18,8 +18,7 @@ export function priceOrder(
   freeDeliveryThreshold = 45,
 ) {
   const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const fee =
-    subtotal >= freeDeliveryThreshold || subtotal === 0 ? 0 : deliveryFee;
+  const fee = subtotal >= freeDeliveryThreshold || subtotal === 0 ? 0 : deliveryFee;
   const discount = Number((subtotal * discountRate).toFixed(2));
   const total = Number((subtotal + fee - discount).toFixed(2));
   return { subtotal: Number(subtotal.toFixed(2)), deliveryFee: fee, discount, total };

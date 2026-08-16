@@ -13,7 +13,7 @@ import coldBrew from "@/assets/food-coldbrew.jpg";
 import chocolate from "@/assets/food-chocolate.jpg";
 import cheesecake from "@/assets/food-cheesecake.jpg";
 
-export const CATEGORIES: { name: FoodCategory; blurb: string }[] = [
+export const CATEGORIES: { name: string; blurb: string }[] = [
   { name: "Burgers", blurb: "Dry-aged, charcoal-grilled" },
   { name: "Pizza", blurb: "72-hour fermented dough" },
   { name: "Chicken", blurb: "Free-range, fire-kissed" },
@@ -26,7 +26,13 @@ export const CATEGORIES: { name: FoodCategory; blurb: string }[] = [
  * Mock catalogue — replaced later by GET /api/foods.
  * Keep this the single source of truth for food data.
  */
-export const FOODS: Food[] = [
+// Note: several entries below use category labels ("Chicken", "Sides", "Drinks")
+// that predate the current FoodCategory union — this mock catalogue is unused
+// dead code (nothing in src imports FOODS), so the looser type here just keeps
+// it buildable without rewriting its (unused) content.
+type MockFood = Omit<Food, "category"> & { category: string };
+
+export const FOODS: MockFood[] = [
   {
     id: "mrd-001",
     name: "Meridian Signature Burger",
@@ -45,8 +51,7 @@ export const FOODS: Food[] = [
   {
     id: "mrd-002",
     name: "Smoked Brisket Burger",
-    description:
-      "Twelve-hour smoked brisket, aged cheddar, pickled red onion and bourbon glaze.",
+    description: "Twelve-hour smoked brisket, aged cheddar, pickled red onion and bourbon glaze.",
     tagline: "Low and slow",
     category: "Burgers",
     price: 16.9,
@@ -74,8 +79,7 @@ export const FOODS: Food[] = [
   {
     id: "mrd-004",
     name: "Margherita Reale",
-    description:
-      "San Marzano tomato, buffalo mozzarella, Genovese basil and Sicilian olive oil.",
+    description: "San Marzano tomato, buffalo mozzarella, Genovese basil and Sicilian olive oil.",
     tagline: "Naples, exactly",
     category: "Pizza",
     price: 15.5,
@@ -88,8 +92,7 @@ export const FOODS: Food[] = [
   {
     id: "mrd-005",
     name: "Charred Harissa Chicken",
-    description:
-      "Half free-range chicken, rose harissa, burnt lemon and coriander seed.",
+    description: "Half free-range chicken, rose harissa, burnt lemon and coriander seed.",
     tagline: "Over open flame",
     category: "Chicken",
     price: 19.5,
@@ -103,8 +106,7 @@ export const FOODS: Food[] = [
   {
     id: "mrd-006",
     name: "Buttermilk Chicken Katsu",
-    description:
-      "Panko-crusted buttermilk chicken with a house katsu reduction and shiso salt.",
+    description: "Panko-crusted buttermilk chicken with a house katsu reduction and shiso salt.",
     tagline: "Crisp, always",
     category: "Chicken",
     price: 17,

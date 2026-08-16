@@ -1,13 +1,14 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Search, X } from "lucide-react";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 
 import { StarRating } from "@/components/common/StarRating";
+import { useQuery } from "@/hooks/useQuery";
 import { formatPrice } from "@/utils/format";
 import { readStorage, STORAGE_KEYS, writeStorage } from "@/utils/storage";
 import { searchFoods } from "@/services/foodService";
+import { buildMenuSearch } from "@/utils/searchParams";
 
 const SUGGESTIONS = ["Truffle", "Burger", "Pizza", "Fries", "Dessert", "Cold brew"];
 
@@ -42,7 +43,6 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
     queryKey: ["foods", "search", term],
     queryFn: () => searchFoods(term),
     enabled: term.trim().length > 1,
-    staleTime: 30_000,
   });
   const results = useMemo(
     () => (term.trim().length > 1 ? (searchQuery.data ?? []).slice(0, 6) : []),
@@ -61,7 +61,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
     commit(value);
     onClose();
     setTerm("");
-    navigate({ to: "/menu", search: { q: value.trim(), category: "All" } });
+    navigate({ pathname: "/menu", search: buildMenuSearch({ q: value.trim(), category: "All" }) });
   }
 
   return (
@@ -154,8 +154,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                   {results.map((food) => (
                     <li key={food.id}>
                       <Link
-                        to="/menu/$id"
-                        params={{ id: food.id }}
+                        to={`/menu/${food.id}`}
                         onClick={() => {
                           commit(term);
                           onClose();
@@ -192,9 +191,7 @@ export function SearchDialog({ open, onClose }: SearchDialogProps) {
                 </ul>
               ) : (
                 <div className="py-10 text-center">
-                  <p className="text-sm text-foreground">
-                    Nothing on the menu matches “{term}”.
-                  </p>
+                  <p className="text-sm text-foreground">Nothing on the menu matches “{term}”.</p>
                   <p className="mt-2 text-sm text-muted-foreground">
                     Try “burger”, “pizza” or browse the full menu.
                   </p>

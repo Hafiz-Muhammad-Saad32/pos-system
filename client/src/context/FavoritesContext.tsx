@@ -1,4 +1,4 @@
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { useLocation, useNavigate } from "react-router-dom";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { toast } from "sonner";
@@ -20,7 +20,7 @@ const FavoritesContext = createContext<FavoritesContextValue | null>(null);
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const { pathname } = useLocation();
   const [ids, setIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -33,7 +33,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     let active = true;
     setIsLoading(true);
     favoriteService
-      .getFavorites()                        // no userId needed — JWT tells backend who you are
+      .getFavorites() // no userId needed — JWT tells backend who you are
       .then((next) => active && setIds(next))
       .catch(() => active && setIds([]))
       .finally(() => active && setIsLoading(false));
@@ -48,18 +48,24 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     (food: Food) => {
       if (!isAuthenticated || !user) {
         toast.info("Sign in to save favourites");
-        navigate({ to: "/login", search: { redirect: pathname } });
+        navigate({ pathname: "/login", search: `?redirect=${encodeURIComponent(pathname)}` });
         return;
       }
       if (ids.includes(food.id)) {
-        favoriteService.removeFavorite(food.id).then(setIds).catch(() => {
-          toast.error("Could not remove favourite — try again");
-        });
+        favoriteService
+          .removeFavorite(food.id)
+          .then(setIds)
+          .catch(() => {
+            toast.error("Could not remove favourite — try again");
+          });
         toast.success(`${food.name} removed from favourites`);
       } else {
-        favoriteService.addFavorite(food.id).then(setIds).catch(() => {
-          toast.error("Could not save favourite — try again");
-        });
+        favoriteService
+          .addFavorite(food.id)
+          .then(setIds)
+          .catch(() => {
+            toast.error("Could not save favourite — try again");
+          });
         toast.success(`${food.name} saved to favourites`);
       }
     },
@@ -69,9 +75,12 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const removeFavorite = useCallback(
     (foodId: string) => {
       if (!user) return;
-      favoriteService.removeFavorite(foodId).then(setIds).catch(() => {
-        toast.error("Could not remove favourite — try again");
-      });
+      favoriteService
+        .removeFavorite(foodId)
+        .then(setIds)
+        .catch(() => {
+          toast.error("Could not remove favourite — try again");
+        });
       toast.success("Removed from favourites");
     },
     [user],

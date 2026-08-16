@@ -1,8 +1,11 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from "react-router-dom";
 import { Instagram, Mail, MapPin, Phone, Twitter, Youtube } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
-const CATEGORIES = ["Burgers","Pizza","Chicken","Sides","Drinks","Desserts"].map((n) => ({ name: n }));
+import { buildMenuSearch } from "@/utils/searchParams";
+const CATEGORIES = ["Burgers", "Pizza", "Chicken", "Sides", "Drinks", "Desserts"].map((n) => ({
+  name: n,
+}));
 
 export function Footer() {
   return (
@@ -11,8 +14,8 @@ export function Footer() {
         <div className="lg:col-span-1">
           <Logo />
           <p className="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            A modern kitchen and bar built on fire, fermentation and produce picked the
-            same morning. Delivered across the city, seven days a week.
+            A modern kitchen and bar built on fire, fermentation and produce picked the same
+            morning. Delivered across the city, seven days a week.
           </p>
           <div className="mt-6 flex gap-2">
             {[
@@ -73,8 +76,10 @@ export function Footer() {
             {CATEGORIES.map((category) => (
               <li key={category.name}>
                 <Link
-                  to="/menu"
-                  search={{ q: "", category: category.name }}
+                  to={{
+                    pathname: "/menu",
+                    search: buildMenuSearch({ q: "", category: category.name }),
+                  }}
                   className="hover:text-primary"
                 >
                   {category.name}

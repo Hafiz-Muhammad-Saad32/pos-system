@@ -3,7 +3,7 @@ import type { FoodCategory } from "@/types";
 
 // Static category names — these are UI labels only, not data
 const CATEGORY_NAMES: FoodCategory[] = [
-   "Salads",
+  "Salads",
   "Starters & Appetizers",
   "Soups",
   "BBQ & Kabab",
@@ -17,7 +17,7 @@ const CATEGORY_NAMES: FoodCategory[] = [
   "Chinese",
   "Breads & Naan",
   "Desserts",
-  "Beverages"
+  "Beverages",
 ];
 
 interface CategoryFilterProps {
@@ -58,7 +58,6 @@ export function CategoryFilter({ value, onChange, className }: CategoryFilterPro
     </div>
   );
 }
-
 
 //import { CATEGORIES } from "@/data/foods";
 // import { cn } from "@/lib/utils";
