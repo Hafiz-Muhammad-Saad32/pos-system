@@ -31,6 +31,8 @@ const getById = asyncHandler(async (req: Request, res: Response) => {
   res.json({ order: serializeCustomerOrder(order) });
 });
 
+const MAX_ORDER_NUMBER_ATTEMPTS = 3;
+
 // POST /api/orders
 const create = asyncHandler(async (req: Request, res: Response) => {
   const { items, customer: customerInput, deliveryAddress, paymentMethod, note } = req.body;
@@ -42,95 +44,128 @@ const create = asyncHandler(async (req: Request, res: Response) => {
 
   // Only foodId + quantity are trusted from the client; name/price/image (if
   // sent) are ignored and rebuilt from the live Food docs below.
-  // TODO: refine type — req.body shape is validated by zod at the route layer (createOrderSchema)
-  // but not threaded through to a TS type here
   const requestedItems = items.map((item: any) => ({ foodId: item.foodId, quantity: item.quantity }));
 
-  // TODO: refine type — assigned from either the transactional or fallback path below
-  let order: any;
-  let session: ClientSession | null;
-  try {
-    session = await mongoose.startSession();
-  } catch (err) {
-    session = null;
-  }
+  const attemptOnce = async (): Promise<any> => {
+    let order: any;
 
-  const run = async (activeSession: ClientSession | null) => {
-    const resolvedItems = await resolveAndValidateItems(requestedItems, activeSession);
+    const run = async (activeSession: ClientSession | null) => {
+      const resolvedItems = await resolveAndValidateItems(requestedItems, activeSession);
 
-    const subtotal = resolvedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const deliveryFee = subtotal > 0 && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0;
-    const discount = 0;
-    const total = subtotal + deliveryFee - discount;
+      const subtotal = resolvedItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+      const deliveryFee = subtotal > 0 && subtotal < FREE_DELIVERY_THRESHOLD ? DELIVERY_FEE : 0;
+      const discount = 0;
+      const total = subtotal + deliveryFee - discount;
 
-    await decrementStock(resolvedItems, activeSession);
+      await decrementStock(resolvedItems, activeSession);
 
-    const orderNumber = await generateOrderNumber();
+      const orderNumber = generateOrderNumber();
 
-    const [created] = await Order.create(
-      [
-        {
-          customerId: customer._id,
-          // Existing flat fields — POS code (analyticsController.js,
-          // customerController.js) reads these, so they're always populated.
-          customerName: customerInput.name,
-          customerPhone: customerInput.phone,
-          customerAddress: deliveryAddress.address || "",
-          items: resolvedItems.map((i) => ({
-            foodId: i.foodId,
-            name: i.name,
-            quantity: i.quantity,
-            price: i.price,
-            image: i.food.image || i.food.imageUrl || "",
-          })),
-          subtotal,
-          discount,
-          total,
-          status: "pending",
-          channel: "website",
-          note: note || "",
-          orderNumber,
-          deliveryFee,
-          paymentMethod,
-          paymentStatus: "unpaid",
-          deliveryAddress: {
-            address: deliveryAddress.address || "",
-            city: deliveryAddress.city || "",
-            postalCode: deliveryAddress.postalCode || "",
+      const [created] = await Order.create(
+        [
+          {
+            customerId: customer._id,
+            // Existing flat fields — POS code (analyticsController.js,
+            // customerController.js) reads these, so they're always populated.
+            customerName: customerInput.name,
+            customerPhone: customerInput.phone,
+            customerAddress: deliveryAddress.address || "",
+            items: resolvedItems.map((i) => ({
+              foodId: i.foodId,
+              name: i.name,
+              quantity: i.quantity,
+              price: i.price,
+              image: i.food.image || i.food.imageUrl || "",
+            })),
+            subtotal,
+            discount,
+            total,
+            status: "pending",
+            channel: "website",
+            note: note || "",
+            orderNumber,
+            deliveryFee,
+            paymentMethod,
+            paymentStatus: "unpaid",
+            deliveryAddress: {
+              address: deliveryAddress.address || "",
+              city: deliveryAddress.city || "",
+              postalCode: deliveryAddress.postalCode || "",
+            },
+            customerSnapshot: {
+              name: customerInput.name,
+              email: customerInput.email,
+              phone: customerInput.phone,
+            },
           },
-          customerSnapshot: {
-            name: customerInput.name,
-            email: customerInput.email,
-            phone: customerInput.phone,
+        ],
+        { session: activeSession }
+      );
+
+      // Atomic $inc instead of load-mutate-save: safe even if the
+      // transaction driver internally retries this callback on a transient
+      // error (load-mutate-save would double-count on such a retry since
+      // the in-memory `customer` object stays mutated from the failed pass).
+      await Customer.updateOne(
+        { _id: customer._id },
+        {
+          $inc: { totalOrders: 1, totalSpent: total },
+          $set: {
+            lastOrderAt: new Date(),
+            ...(deliveryAddress.address ? { address: deliveryAddress.address } : {}),
+            ...(deliveryAddress.city ? { city: deliveryAddress.city } : {}),
+            ...(deliveryAddress.postalCode ? { postalCode: deliveryAddress.postalCode } : {}),
           },
         },
-      ],
-      { session: activeSession }
-    );
+        { session: activeSession }
+      );
 
-    customer.totalOrders += 1;
-    customer.totalSpent += total;
-    customer.lastOrderAt = new Date();
-    if (deliveryAddress.address) customer.address = deliveryAddress.address;
-    if (deliveryAddress.city) customer.city = deliveryAddress.city;
-    if (deliveryAddress.postalCode) customer.postalCode = deliveryAddress.postalCode;
-    await customer.save({ session: activeSession });
+      order = created;
+    };
 
-    order = created;
+    let session: ClientSession | null;
+    try {
+      session = await mongoose.startSession();
+    } catch (err) {
+      session = null;
+    }
+
+    if (session) {
+      try {
+        await session.withTransaction(async () => run(session));
+      } finally {
+        session.endSession();
+      }
+    } else {
+      // No replica set / transactions unavailable — validate before any writes,
+      // then write sequentially (same fallback the webhook uses).
+      await resolveAndValidateItems(requestedItems, null);
+      await run(null);
+    }
+
+    return order;
   };
 
-  if (session) {
+  let order: any;
+  let lastErr: any = null;
+
+  for (let attempt = 0; attempt < MAX_ORDER_NUMBER_ATTEMPTS; attempt += 1) {
     try {
-      await session.withTransaction(async () => run(session));
-    } finally {
-      session.endSession();
+      order = await attemptOnce();
+      lastErr = null;
+      break;
+    } catch (err: any) {
+      // Only retry on an actual orderNumber collision (extremely unlikely
+      // given the new generator, but the unique index is the real
+      // guarantee, so we still honor it correctly). Any other error
+      // (validation, stock, etc.) fails immediately, unchanged.
+      const isOrderNumberConflict =
+        err?.code === 11000 && err?.keyPattern && "orderNumber" in err.keyPattern;
+      if (!isOrderNumberConflict) throw err;
+      lastErr = err;
     }
-  } else {
-    // No replica set / transactions unavailable — validate before any writes,
-    // then write sequentially (same fallback the webhook uses).
-    await resolveAndValidateItems(requestedItems, null);
-    await run(null);
   }
+  if (lastErr) throw lastErr;
 
   res.status(201).json({ order: serializeCustomerOrder(order) });
 });

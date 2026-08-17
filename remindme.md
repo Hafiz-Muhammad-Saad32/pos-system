@@ -4,6 +4,4 @@
 4. socket ko dekhna he
 
 5. notification icon kaam nahi karraha
-7. pos food catagory problem kar rahi he
 9. payment kese kare ga pos me show nahi ho raha
-10. order id duplicate error

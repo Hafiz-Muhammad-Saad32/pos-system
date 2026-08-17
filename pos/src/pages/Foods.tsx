@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 const schema = z.object({
   name: z.string().trim().min(2, "Name is required").max(80),
   description: z.string().trim().min(5, "Add a short description").max(240),
-  category: z.enum(["Starters", "Mains", "Grill", "Desserts", "Beverages"]),
+  category:z.enum(FOOD_CATEGORIES as [string, ...string[]]),
   price: z.coerce.number().positive("Price must be greater than 0").max(9999),
   imageUrl: z.string().trim().url("Enter a valid image URL"),
   available: z.boolean(),

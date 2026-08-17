@@ -8,7 +8,7 @@ const router = express.Router();
 
 const listQuerySchema = z.object({
   search: z.string().optional(),
-  category: z.enum(["Starters", "Mains", "Grill", "Desserts", "Beverages"]).optional(),
+  category: z.string().optional(),
   availability: z.enum(["available", "unavailable"]).optional(),
   page: z.string().optional(),
   pageSize: z.string().optional(),
