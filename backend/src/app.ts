@@ -27,8 +27,8 @@ app.use(
     origin: [
       process.env.CLIENT_URL,
       process.env.CORS_ORIGIN,
-      "http://localhost:3000",
-    ].filter(Boolean),
+      "http://localhost:5173",
+    ].filter((origin): origin is string => Boolean(origin)),
     credentials: true,
   })
 );

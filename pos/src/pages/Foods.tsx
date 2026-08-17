@@ -204,7 +204,7 @@ export default function FoodsPage() {
                   !food.available && "opacity-75",
                 )}
               >
-                <div className="relative aspect-[4/3] overflow-hidden bg-surface-2">
+                <div className="relative aspect-4/3 overflow-hidden bg-surface-2">
                   <img
                     src={food.imageUrl}
                     alt={food.name}

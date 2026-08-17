@@ -117,7 +117,7 @@ const create = asyncHandler(async (req: Request, res: Response) => {
             ...(deliveryAddress.postalCode ? { postalCode: deliveryAddress.postalCode } : {}),
           },
         },
-        { session: activeSession }
+        { session: activeSession || undefined }
       );
 
       order = created;

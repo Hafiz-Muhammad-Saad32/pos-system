@@ -54,6 +54,7 @@ export interface IOrder extends Document {
     email: string;
     phone: string;
   };
+  
 
   createdAt: Date;
   updatedAt: Date;
